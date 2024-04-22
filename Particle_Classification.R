@@ -17,6 +17,7 @@ library(lightgbm)
 library(themis)
 library(bonsai)
 library(bestNormalize)
+library(embed)
 conflicted::conflicts_prefer(yardstick::rmse)
 conflicted::conflicts_prefer(yardstick::accuracy)
 conflicted::conflicts_prefer(yardstick::spec)
@@ -121,13 +122,13 @@ test_actual$type <- as.factor(test_actual$type)
 
 my_recipe <- recipe(type~., data=train) %>%
   update_role(id, new_role="id") %>% 
-  step_mutate(Area = Boxcox(Area)) %>% # Uses a Box Cox transformation to Normalize Area Data
-  step_mutate(XM = orderNorm(XM)) %>%  # Uses a Order Normal transformation to Normalize XM Data
-  step_mutate(YM = orderNorm(YM)) %>%  # Uses a Order Normal transformation to Normalize YM Data
-  step_mutate(Circ. = orderNorm(Circ.)) %>%
-  step_mutate(AR = orderNorm(AR)) %>%
-  step_mutate(Round = orderNorm(Round)) %>%
-  step_mutate(Solidarity = yeojohnson(Solidarity)) %>%
+  step_mutate(Area = predict(boxcox(Area))) %>% # Uses a Box Cox transformation to Normalize Area Data
+  step_mutate(XM = predict(orderNorm(XM))) %>%  # Uses a Order Normal transformation to Normalize XM Data
+  step_mutate(YM = predict(orderNorm(YM))) %>%  # Uses a Order Normal transformation to Normalize YM Data
+  step_mutate(Circ. = predict(orderNorm(Circ.))) %>%
+  step_mutate(AR = predict(orderNorm(AR))) %>%
+  step_mutate(Round = predict(orderNorm(Round))) %>%
+  step_mutate(Solidity = predict(yeojohnson(Solidity))) %>%
   step_lencode_mixed(all_nominal_predictors(), outcome = vars(type)) %>% 
   # step_normalize(all_numeric_predictors()) %>% 
   step_smote(all_outcomes(), neighbors=7)
