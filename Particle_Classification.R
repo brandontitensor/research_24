@@ -66,44 +66,44 @@ test_actual$type <- as.factor(test_actual$type)
 ## TRANSFORMATIONS ##
 #####################
 
-# choose_best_normalization <- function(train, response_var, exclude_cols = NULL) {
-#   # Remove the response variable and excluded columns from the feature columns
-#   feature_cols <- setdiff(colnames(train), c(response_var, exclude_cols))
-#   
-#   # Initialize an empty list to store the chosen normalization functions
-#   normalization_functions <- list()
-#   
-#   # Get the total number of feature columns
-#   num_features <- length(feature_cols)
-#   
-#   # Iterate over each feature column using index i
-#   for (i in 1:num_features) {
-#     col_name <- feature_cols[i]
-#     
-#     # Check the data type of the column
-#     col_type <- typeof(train[[col_name]])
-#     
-#     if (col_type == "list") {
-#       # Extract numeric values from the list column
-#       train[[col_name]] <- sapply(train[[col_name]], function(x) x[[1]])
-#     }
-#     
-#     # Convert the column to numeric
-#     train[[col_name]] <- as.numeric(train[[col_name]])
-#     
-#     # Find the best normalization function for the column
-#     best_norm <- bestNormalize(train[[col_name]], allow_orderNorm = TRUE, allow_exp = TRUE)
-#     
-#     # Store the chosen normalization function in the list
-#     normalization_functions[[col_name]] <- best_norm$chosen_transform
-#   }
-#   
-#   # Return the list of chosen normalization functions
-#   return(normalization_functions)
-# }
-# 
-# 
-# normalization_funcs <- choose_best_normalization(train, response_var = "type", exclude_cols = c("id"))
+choose_best_normalization <- function(train, response_var, exclude_cols = NULL) {
+  # Remove the response variable and excluded columns from the feature columns
+  feature_cols <- setdiff(colnames(train), c(response_var, exclude_cols))
+
+  # Initialize an empty list to store the chosen normalization functions
+  normalization_functions <- list()
+
+  # Get the total number of feature columns
+  num_features <- length(feature_cols)
+
+  # Iterate over each feature column using index i
+  for (i in 1:num_features) {
+    col_name <- feature_cols[i]
+
+    # Check the data type of the column
+    col_type <- typeof(train[[col_name]])
+
+    if (col_type == "list") {
+      # Extract numeric values from the list column
+      train[[col_name]] <- sapply(train[[col_name]], function(x) x[[1]])
+    }
+
+    # Convert the column to numeric
+    train[[col_name]] <- as.numeric(train[[col_name]])
+
+    # Find the best normalization function for the column
+    best_norm <- bestNormalize(train[[col_name]], allow_orderNorm = TRUE, allow_exp = TRUE)
+
+    # Store the chosen normalization function in the list
+    normalization_functions[[col_name]] <- best_norm$chosen_transform
+  }
+
+  # Return the list of chosen normalization functions
+  return(normalization_functions)
+}
+
+
+normalization_funcs <- choose_best_normalization(train, response_var = "type", exclude_cols = c("id"))
 # 
 # normalization_funcs
 # 
@@ -122,7 +122,8 @@ test_actual$type <- as.factor(test_actual$type)
 
 my_recipe <- recipe(type~., data=train) %>%
   update_role(id, new_role="id") %>% 
-  step_mutate(Area = predict(boxcox(Area))) %>% # Uses a Box Cox transformation to Normalize Area Data
+  step_rm(Area)
+#  step_mutate(Area = predict(boxcox(Area))) %>% # Uses a Box Cox transformation to Normalize Area Data
   step_mutate(XM = predict(orderNorm(XM))) %>%  # Uses a Order Normal transformation to Normalize XM Data
   step_mutate(YM = predict(orderNorm(YM))) %>%  # Uses a Order Normal transformation to Normalize YM Data
   step_mutate(Circ. = predict(orderNorm(Circ.))) %>%
@@ -177,4 +178,4 @@ boost_predictions <- bind_cols(test$id,boost_prediction$.pred_class,test_actual$
 
 colnames(boost_predictions) <- c("Id","Prediction","Actual")
 
-vroom_write(boost_predictions,"boost_predictions1.csv",',')
+vroom_write(boost_predictions,"boost_predictions2.csv",',')
