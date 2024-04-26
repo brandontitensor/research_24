@@ -122,7 +122,7 @@ normalization_funcs <- choose_best_normalization(train, response_var = "type", e
 
 my_recipe <- recipe(type~., data=train) %>%
   update_role(id, new_role="id") %>% 
-  step_rm(Area)
+  step_rm(Area) %>%
 #  step_mutate(Area = predict(boxcox(Area))) %>% # Uses a Box Cox transformation to Normalize Area Data
   step_mutate(XM = predict(orderNorm(XM))) %>%  # Uses a Order Normal transformation to Normalize XM Data
   step_mutate(YM = predict(orderNorm(YM))) %>%  # Uses a Order Normal transformation to Normalize YM Data
