@@ -18,6 +18,7 @@ library(themis)
 library(bonsai)
 library(bestNormalize)
 library(embed)
+library(pROC)
 conflicted::conflicts_prefer(yardstick::rmse)
 conflicted::conflicts_prefer(yardstick::accuracy)
 conflicted::conflicts_prefer(yardstick::spec)
@@ -116,11 +117,26 @@ normalization_funcs <- choose_best_normalization(train, response_var = "type", e
 # Round = orderNorm(Round)
 # Solidarity = yeojohnson(Solidarity)
 
+#####################
+## MODEL SELECTION ##
+#####################
+
+#Quick iteration subset
+split2<- sample(c(rep(0, 0.05 * nrow(train)),rep(1, 0.95 * nrow(train)),1))
+split3<- sample(c(rep(1, 0.05 * nrow(test)),rep(0, 0.95 * nrow(test)),1))
+qi_train <- train[split2 == 0,]
+qi_test <- test[split3 == 1,]
+
+qi_test_actual <- qi_test
+qi_test_actual$type <- ifelse(qi_test_actual$Area > 0.000005, "dust", "artifact")
+qi_test_actual$type <- as.factor(qi_test_actual$type)
+
+
 ############
 ## RECIPE ##
 ############
 
-my_recipe <- recipe(type~., data=train) %>%
+my_recipe <- recipe(type~., data=qi_train) %>%
   update_role(id, new_role="id") %>% 
   step_rm(Area) %>%
 #  step_mutate(Area = predict(boxcox(Area))) %>% # Uses a Box Cox transformation to Normalize Area Data
@@ -160,22 +176,25 @@ folds_boost <- vfold_cv(train, v = 10, repeats=1)
 CV_results_boost <- boost_workflow %>%
   tune_grid(resamples=folds_boost,
             grid=tuning_grid_boost,
-            metrics=metric_set(f_meas, sens, recall, accuracy))
+            metrics=metric_set(roc_auc,f_meas, sens, recall, accuracy))
 
 bestTune_boost <- CV_results_boost %>%
-  select_best("accuracy")
+  select_best("roc_auc")
 
 final_wf_boost <- boost_workflow %>% 
   finalize_workflow(bestTune_boost) %>% 
-  fit(data = train)
+  fit(data = qi_train)
 
 
 boost_prediction <- final_wf_boost %>% 
-  predict(new_data = test, type="class")
+  predict(new_data = qi_test, type="prob")
 
 
-boost_predictions <- bind_cols(test$id,boost_prediction$.pred_class,test_actual$type)
-
+boost_predictions <- bind_cols(qi_test$id,boost_prediction$.pred_class,qi_test_actual$type)
 colnames(boost_predictions) <- c("Id","Prediction","Actual")
+
+roc(boost_predictions$Actual,boost_predictions$Prediction)
+
+#TRIAL 1 Roc
 
 vroom_write(boost_predictions,"boost_predictions2.csv",',')
