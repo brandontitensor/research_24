@@ -66,46 +66,46 @@ test_actual$type <- as.factor(test_actual$type)
 #####################
 ## TRANSFORMATIONS ##
 #####################
-
-choose_best_normalization <- function(train, response_var, exclude_cols = NULL) {
-  # Remove the response variable and excluded columns from the feature columns
-  feature_cols <- setdiff(colnames(train), c(response_var, exclude_cols))
-
-  # Initialize an empty list to store the chosen normalization functions
-  normalization_functions <- list()
-
-  # Get the total number of feature columns
-  num_features <- length(feature_cols)
-
-  # Iterate over each feature column using index i
-  for (i in 1:num_features) {
-    col_name <- feature_cols[i]
-
-    # Check the data type of the column
-    col_type <- typeof(train[[col_name]])
-
-    if (col_type == "list") {
-      # Extract numeric values from the list column
-      train[[col_name]] <- sapply(train[[col_name]], function(x) x[[1]])
-    }
-
-    # Convert the column to numeric
-    train[[col_name]] <- as.numeric(train[[col_name]])
-
-    # Find the best normalization function for the column
-    best_norm <- bestNormalize(train[[col_name]], allow_orderNorm = TRUE, allow_exp = TRUE)
-
-    # Store the chosen normalization function in the list
-    normalization_functions[[col_name]] <- best_norm$chosen_transform
-  }
-
-  # Return the list of chosen normalization functions
-  return(normalization_functions)
-}
-
-
-normalization_funcs <- choose_best_normalization(train, response_var = "type", exclude_cols = c("id"))
 # 
+# choose_best_normalization <- function(train, response_var, exclude_cols = NULL) {
+#   # Remove the response variable and excluded columns from the feature columns
+#   feature_cols <- setdiff(colnames(train), c(response_var, exclude_cols))
+# 
+#   # Initialize an empty list to store the chosen normalization functions
+#   normalization_functions <- list()
+# 
+#   # Get the total number of feature columns
+#   num_features <- length(feature_cols)
+# 
+#   # Iterate over each feature column using index i
+#   for (i in 1:num_features) {
+#     col_name <- feature_cols[i]
+# 
+#     # Check the data type of the column
+#     col_type <- typeof(train[[col_name]])
+# 
+#     if (col_type == "list") {
+#       # Extract numeric values from the list column
+#       train[[col_name]] <- sapply(train[[col_name]], function(x) x[[1]])
+#     }
+# 
+#     # Convert the column to numeric
+#     train[[col_name]] <- as.numeric(train[[col_name]])
+# 
+#     # Find the best normalization function for the column
+#     best_norm <- bestNormalize(train[[col_name]], allow_orderNorm = TRUE, allow_exp = TRUE)
+# 
+#     # Store the chosen normalization function in the list
+#     normalization_functions[[col_name]] <- best_norm$chosen_transform
+#   }
+# 
+#   # Return the list of chosen normalization functions
+#   return(normalization_functions)
+# }
+# 
+# 
+# normalization_funcs <- choose_best_normalization(train, response_var = "type", exclude_cols = c("id"))
+# # 
 # normalization_funcs
 # 
 # ## Results
@@ -122,8 +122,8 @@ normalization_funcs <- choose_best_normalization(train, response_var = "type", e
 #####################
 
 #Quick iteration subset
-split2<- sample(c(rep(0, 0.05 * nrow(train)),rep(1, 0.95 * nrow(train)),1))
-split3<- sample(c(rep(1, 0.05 * nrow(test)),rep(0, 0.95 * nrow(test)),1))
+split2<- sample(c(rep(0, 0.01 * nrow(train)),rep(1, 0.99 * nrow(train)),1))
+split3<- sample(c(rep(1, 0.01 * nrow(test)),rep(0, 0.99 * nrow(test)),1))
 qi_train <- train[split2 == 0,]
 qi_test <- test[split3 == 1,]
 
